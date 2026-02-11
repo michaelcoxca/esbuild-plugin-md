@@ -1,4 +1,6 @@
 node_modules
+.github
 dist
 *.log
 test/dist
+package-lock.json

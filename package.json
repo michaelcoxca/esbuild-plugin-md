@@ -15,12 +15,7 @@
   "scripts": {
     "build": "NODE_ENV=production node build.js && tsc --emitDeclarationOnly",
     "dev": "NODE_ENV=development node build.js",
-    "test": "yarn build && cd test && mocha 'index.js' --no-timeout --exit",
-    "fmt": "prettier --write .",
-    "fmt:check": "prettier --check ."
-  },
-  "gitHooks": {
-    "pre-commit": "prettier --write . && git add -A"
+    "test": "yarn build && cd test && mocha 'index.js' --no-timeout --exit"
   },
   "files": [
     "dist"
@@ -39,7 +34,6 @@
     "chai": "^4.3.0",
     "esbuild": "^0.8.49",
     "mocha": "^8.3.0",
-    "prettier": "^2.2.1",
     "typescript": "^4.1.5",
     "yorkie": "^2.0.0"
   }
