@@ -1,14 +1,25 @@
-import { Plugin } from "esbuild";
+// src/index.ts
+/// <reference path="markdown.d.ts" />
+import * as esbuild from 'esbuild'
+
 import { TextDecoder } from "util";
-import path from "path";
-import fs from "fs-extra";
-import marked, { MarkedOptions } from "marked";
+
+import path from 'node:path'
+import { readFile } from 'node:fs/promises';
+
+import { parse, MarkedOptions } from "marked";
 
 interface MarkdownPluginOptions {
   markedOptions?: MarkedOptions;
 }
 
-export const markdownPlugin = (options: MarkdownPluginOptions): Plugin => ({
+
+export default function markdownPlugin(options: MarkdownPluginOptions) {
+	
+	return _markdownPlugin(options);
+}
+
+const _markdownPlugin = (options: MarkdownPluginOptions) => ({
   name: "markdown",
   setup(build) {
     // resolve .md files
@@ -25,10 +36,9 @@ export const markdownPlugin = (options: MarkdownPluginOptions): Plugin => ({
 
     // load files with "markdown" namespace
     build.onLoad({ filter: /.*/, namespace: "markdown" }, async (args) => {
-      const markdownContent = new TextDecoder().decode(
-          await fs.readFile(args.path)
-        ),
-        markdownHTML = marked(markdownContent, options?.markedOptions);
+		
+      const markdownContent = new TextDecoder().decode(await readFile(args.path));  
+      const markdownHTML = parse(markdownContent, options?.markedOptions);
 
       return {
         contents: JSON.stringify({
