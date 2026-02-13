@@ -1,25 +1,16 @@
 // src/index.ts
 /// <reference path="markdown.d.ts" />
 import * as esbuild from 'esbuild'
-
 import { TextDecoder } from "util";
-
 import path from 'node:path'
 import { readFile } from 'node:fs/promises';
-
 import { parse, MarkedOptions } from "marked";
 
-interface MarkdownPluginOptions {
+export interface PluginOptions {
   markedOptions?: MarkedOptions;
 }
 
-
-export default function markdownPlugin(options: MarkdownPluginOptions) {
-	
-	return _markdownPlugin(options);
-}
-
-const _markdownPlugin = (options: MarkdownPluginOptions) => ({
+export default (options?: PluginOptions) => ({
   name: "markdown",
   setup(build) {
     // resolve .md files

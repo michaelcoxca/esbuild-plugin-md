@@ -1,11 +1,11 @@
 {
-  "name": "esbuild-md-plugin",
+  "name": "esbuild-plugin-md",
   "version": "0.0.3",
   "description": "Import markdown files with esbuild",
-  "main": "dist/index.js",
-  "module": "dist/index.esm.js",
-  "types": "dist/index.d.ts",
-  "repository": "https://github.com/michaelcoxca/esbuild-md-plugin",
+  "module": "./dist/index.js",
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "repository": "https://github.com/michaelcoxca/esbuild-plugin-md",
   "author": "Michael Cox <hello@michaelcox.ca>",
   "contributors": [
     "Marton Lederer <marton@lederer.hu>"
@@ -17,7 +17,9 @@
   },
   "scripts": {
     "dev": "node esbuild.config.mjs --dev",
-    "build": "node esbuild.config.mjs"
+    "type-check": "tsc --project tsconfig.json --noEmit",
+    "build": "node esbuild.config.mjs && tsc --project tsconfig.json --emitDeclarationOnly --declaration --outDir dist",
+    "test": "jest"
   },
   "files": [
     "dist"
@@ -31,7 +33,7 @@
     "@types/marked": "^5.0.2",
     "@types/node": "^25.2.3",
     "esbuild": "^0.27.3",
-    "jest": "^30.2.0",
-    "typescript": "^4.1.5"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }
