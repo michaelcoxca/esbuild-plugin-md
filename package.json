@@ -2,6 +2,7 @@
   "name": "esbuild-plugin-md",
   "version": "0.1.3",
   "description": "Import markdown files with esbuild",
+  "main": "./dist/index.js",
   "module": "./dist/index.js",
   "type": "module",
   "types": "./dist/index.d.ts",

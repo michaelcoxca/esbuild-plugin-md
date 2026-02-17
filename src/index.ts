@@ -22,7 +22,7 @@ export default (options?: PluginOptions) => ({
 
   
 	const canWrite = build.initialOptions.write;
-	
+	const dirname = import.meta.dirname;
 	
 	const cwd = build.initialOptions.absWorkingDir || process.cwd();
 	const outDir = build.initialOptions.outdir || undefined;
@@ -33,7 +33,7 @@ export default (options?: PluginOptions) => ({
 	
 	//MD-RUNTIME
 	build.onResolve({filter: /^esbuild-plugin-md-runtime$/}, (args) => {	
-		const runTimePath = path.join(__dirname, "runtime.js");
+		const runTimePath = path.join(dirname, "runtime.js");
 		return {
 				path:runTimePath,
 				namespace: "file"
