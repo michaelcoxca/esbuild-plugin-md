@@ -3,8 +3,9 @@ import * as esbuild from 'esbuild';
 import path from 'node:path';
 import { TextDecoder } from "util";
 import { readFile, writeFile, mkdir,access, constants  } from 'node:fs/promises';
-import { parse, MarkedOptions } from "marked";
 
+import { parse, MarkedOptions } from "marked";
+import matter from 'gray-matter';
 
 import { JSDOM } from 'jsdom';
 import DOMPurify from 'dompurify';
@@ -22,17 +23,19 @@ export interface Markdown {
 	content:string;
 	html:string;
 	raw:string;
+	frontMatter:object;
 }
 
 export default (options?: PluginOptions) => ({
   name: "markdown",
   setup(build) {
 	  
-	  //allow disabling DOMPurify
 	  
+	  //Thanks, I hate it.
 	  let _options = {
 		  ...options
 	  };
+	  //allow disabling DOMPurify
 	  const sanitize = _options.sanitize || true;
 
   
@@ -100,11 +103,16 @@ export default (options?: PluginOptions) => ({
 
     // handle loading of .md files
     build.onLoad({ filter: /.*/, namespace: "es-plugin-md" }, async (args) => {
+		
 	  const fileName = path.basename(args.path);
       const rawText = new TextDecoder().decode(await readFile(args.path));  
-      const markdownRawHtml = parse(rawText, options?.markedOptions);
 	  
-	  const markdownHtml = sanitize ? purify(markdownRawHtml) : markdownRawHtml;
+	  const frontMatter = matter(rawText);
+	  
+      const markdownRawHtml = parse(frontMatter.content, options?.markedOptions);
+	  
+
+	  const markdownHtml = sanitize ? purify.sanitize(markdownRawHtml) : markdownRawHtml;
 	  
 	  switch (mdLoader) {
 		  default:
@@ -120,7 +128,8 @@ export default (options?: PluginOptions) => ({
 				contents: JSON.stringify({
 				  html: markdownHtml,
 				  raw: rawText,
-				  filename: fileName
+				  filename: fileName,
+				  frontMatter: frontMatter.data
 				}),
 				loader: "json"
 			}; 		
@@ -135,7 +144,7 @@ export default (options?: PluginOptions) => ({
 							//check if we have permission to actually write files there
 							const hasAccess = await access(writeDir, constants.W_OK);
 							if(hasAccess === undefined) {
-								await writeFile(args.pluginData.writePath, JSON.stringify({filename:fileName, html: markdownHtml, raw: ""}));
+								await writeFile(args.pluginData.writePath, JSON.stringify({filename:fileName, html: markdownHtml, raw: "", frontMatter: frontMatter.data}));
 							}
 						
 					}
