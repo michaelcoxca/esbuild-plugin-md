@@ -61,7 +61,6 @@ export default (options?: PluginOptions) => ({
 	  let argFilePath = relPath.replace(/\.md$/, '.json');
 	  
 	  	  let parts = argFilePath.split(path.sep);
-		  console.log(parts);
 		  
 	while(parts[0] === '..') {
 	  parts.shift();
