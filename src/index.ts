@@ -2,8 +2,10 @@
 import * as esbuild from 'esbuild';
 import path from 'node:path';
 import { TextDecoder } from "util";
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir,access, constants  } from 'node:fs/promises';
 import { parse, MarkedOptions } from "marked";
+
+
 
 export interface PluginOptions {
   markedOptions?: MarkedOptions;
@@ -55,19 +57,26 @@ export default (options?: PluginOptions) => ({
 	  //path relative to project root...
 	  let relPath = path.relative(projectRoot, filePath);
 	  
-	  let parts = relPath.split(path.sep);
-	  parts.shift();
-	  const cleanRelPath = parts.join(path.sep);
+
+	  let argFilePath = relPath.replace(/\.md$/, '.json');
 	  
-	  const argFilePath = cleanRelPath.replace(/\.md$/, '.json');
+	  	  let parts = argFilePath.split(path.sep);
+		  console.log(parts);
+		  
+	while(parts[0] === '..') {
+	  parts.shift();
+	}
+	  parts.shift();
+	  let cleanRelPath = parts.join(path.sep);
+
 	  
 	  //create file path for browser
-	   const urlPath = path.relative(outDir, argFilePath).split(path.sep).join('/');
+	   const urlPath = path.relative(outDir, cleanRelPath).split(path.sep).join('/');
 	   //URL needs a dummy base url for some reason?
 	   const url = new URL(urlPath, "http://example.com").pathname;
 		
-	   const writePath = path.join(projectRoot, argFilePath);
-
+	   const writePath = path.join(projectRoot, cleanRelPath);
+		
 	  
 	  
       return {
@@ -105,21 +114,26 @@ export default (options?: PluginOptions) => ({
 			break;
 		  case "copy":
 		 case "file":
-	 
-				if (canWrite) {
-						const dirExists = mkdir(path.dirname(args.pluginData.writePath),{recursive: true});
-						if(dirExists) {
-							await writeFile(args.pluginData.writePath, JSON.stringify({filename:fileName, html: markdownHTML, raw:""}));
-						}
-					
-				}
-			return {
-				contents: `
-				import lazyLoad from "esbuild-plugin-md-runtime";
-				export default lazyLoad("${args.pluginData.url}");
-				`,
-				loader: "js"
-			}
+				
+				try {
+					if (canWrite) {
+							const writeDir = path.dirname(args.pluginData.writePath);
+							await mkdir(writeDir,{recursive: true});
+							//check if we have permission to actually write files there
+							const hasAccess = await access(writeDir, constants.W_OK);
+							if(hasAccess === undefined) {
+								await writeFile(args.pluginData.writePath, JSON.stringify({filename:fileName, html: markdownHTML, raw:""}));
+							}
+						
+					}
+					return {
+						contents: `
+						import lazyLoad from "esbuild-plugin-md-runtime";
+						export default lazyLoad("${args.pluginData.url}");
+						`,
+						loader: "js"
+					}
+				} catch(err) {console.error(err);throw err;};
 			break;
 	   }
     });
