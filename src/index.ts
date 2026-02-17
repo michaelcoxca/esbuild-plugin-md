@@ -66,15 +66,9 @@ export default (options?: PluginOptions) => ({
 	   const urlPath = path.relative(outDir, ArgFilePath).split(path.sep).join('/');
 	   //URL needs a dummy base url for some reason?
 	   const url = new URL(urlPath, "http://example.com").pathname;
-	 
-	  
+		
+	   const writePath = path.join(projectRoot, ArgFilePath);
 
-		console.log(process.cwd());
-		console.log(filePath);
-		
-		
-		const writePath = path.join(projectRoot, ArgFilePath);
-		console.log(writePath);
 	  
 	  
       return {
@@ -112,10 +106,6 @@ export default (options?: PluginOptions) => ({
 			break;
 		  case "copy":
 		 case "file":	
-				
-				console.log(args);
-				
-				
 				if (canWrite) {
 						const dirExists = mkdir(path.dirname(args.pluginData.writePath),{recursive: true});
 						if(dirExists) {
@@ -123,7 +113,6 @@ export default (options?: PluginOptions) => ({
 						}
 					
 				}
-	
 			return {
 				contents: `
 				import lazyLoad from "esbuild-plugin-md-runtime";
