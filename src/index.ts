@@ -55,19 +55,18 @@ export default (options?: PluginOptions) => ({
 	  //path relative to project root...
 	  let relPath = path.relative(projectRoot, filePath);
 	  
-	  		//change file extension
-		const ArgFilePath = path.format({
-			...path.parse(args.path),
-			base:null,
-			ext: "json"
-		});
+	  let parts = relPath.split(path.sep);
+	  parts.shift();
+	  const cleanRelPath = parts.join(path.sep);
+	  
+	  const argFilePath = cleanRelPath.replace(/\.md$/, '.json');
 	  
 	  //create file path for browser
-	   const urlPath = path.relative(outDir, ArgFilePath).split(path.sep).join('/');
+	   const urlPath = path.relative(outDir, argFilePath).split(path.sep).join('/');
 	   //URL needs a dummy base url for some reason?
 	   const url = new URL(urlPath, "http://example.com").pathname;
 		
-	   const writePath = path.join(projectRoot, ArgFilePath);
+	   const writePath = path.join(projectRoot, argFilePath);
 
 	  
 	  
@@ -105,7 +104,8 @@ export default (options?: PluginOptions) => ({
 			}; 		
 			break;
 		  case "copy":
-		 case "file":	
+		 case "file":
+	 
 				if (canWrite) {
 						const dirExists = mkdir(path.dirname(args.pluginData.writePath),{recursive: true});
 						if(dirExists) {
