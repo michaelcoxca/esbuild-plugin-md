@@ -31,6 +31,7 @@
     "dist"
   ],
   "dependencies": {
+    "DOMPurify": "npm:dompurify@^3.3.1",
     "fs-extra": "^11.3.3",
     "glob": "^13.0.4",
     "gray-matter": "^4.0.3",
