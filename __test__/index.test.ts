@@ -28,7 +28,7 @@ import { describe, test } from "vitest";
 				entryPoints: ['__test__/src/index.html', '__test__/src/basic.ts'],
 				bundle:true,
 				write:true,
-				plugins:[markdownPlugin()],
+				plugins:[markdownPlugin({generateManifest:true})],
 				loader:{".md": "file",
 				".html": "copy",
 				".ts": "ts"},
