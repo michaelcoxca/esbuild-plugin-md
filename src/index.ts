@@ -9,6 +9,7 @@ import matter from 'gray-matter';
 
 import { JSDOM } from 'jsdom';
 import DOMPurify from 'dompurify';
+import {glob }from 'glob';
 
 const window = new JSDOM('').window;
 const purify = DOMPurify(window);
@@ -18,21 +19,29 @@ export interface PluginOptions {
   markedOptions?: MarkedOptions;
   sanitize?:boolean;
   generateManifest?:boolean;
+  manifestType?: "virtualmodule"|"json";
   manifestName?:string;
+ 
 }
-export interface Manifest {
+export interface FrontMatter {
+	title:string;
+	slug:string;
+}
+export interface ManifestData {
 	filename:string;
-	frontmatter:object;
+	frontmatter:FrontMatter;
 	location:string;
 	path:string;
 }
-
+export interface MarkdownManifest {
+	[slug:string]:ManifestData;
+}
 export interface Markdown {
 	filename:string;
 	content:string;
 	html:string;
 	raw:string;
-	frontMatter:object;
+	frontMatter:FrontMatter;
 }
 async function saveFile(filepath:string, content:string | object) {
 	let _content = content;
@@ -64,11 +73,15 @@ export default (options?: PluginOptions) => ({
 		  ...options
 	  };
 	  //allow disabling DOMPurify
-	  const sanitize = _options.sanitize || true;
-	  const generateManifest = _options.generateManifest || false;
-	  const manifestName = _options.manifestName || "manifest.json";
+	const sanitize = _options.sanitize || true;
+	const generateManifest = _options.generateManifest || false;
+	const manifestName = _options.manifestName || "manifest.json";
+	const manifestType = _options.manifestType || "json";
 
-	let manifest:Array<Manifest> = [];
+console.log(manifestType);
+
+
+	let manifest:MarkdownManifest = {};
 	
   
 	const canWrite = build.initialOptions.write;
@@ -78,12 +91,54 @@ export default (options?: PluginOptions) => ({
 	const outDir = build.initialOptions.outdir || undefined;
 	const outBase = build.initialOptions.outbase || process.cwd();
 	  
-	  //get directory where we should write those files C:/project/__test__/dist/
-	  const projectRoot = path.resolve(cwd, outDir || '.');
+	//get directory where we should write those files C:/project/__test__/dist/
+	const projectRoot = path.resolve(cwd, outDir || '.');
 	  
 	
 	const loaders = build.initialOptions.loader || {};
 	const mdLoader = loaders[".md"] || 'js';
+	
+	
+	
+	//md-manifest.ts
+	if (manifestType == "virtualmodule") {
+		build.onResolve({filter: /^esbuild-plugin-md-manifest$/}, (args) => {
+			const runTimePath = path.join(dirname, "md-manifest.ts");
+			return {
+				path:runTimePath,
+				namespace: "md-manifest"
+			};
+		});
+		
+		build.onLoad({ filter: /.*/, namespace: "md-manifest" }, async (args) => {
+			const files = await glob("./**/*.md", {
+				ignore: [
+					'**/node_modules**',
+					'node_modules/**',
+					'**/README.md',
+					'**/readme.md'
+					
+				]
+				
+			});
+			const mapping = `${files.map(file => {
+				const slug = file.split(path.sep).pop().replace(/\.md$/, '');
+				const relPath = './' + path.relative(process.cwd(), file).split(path.sep).join('/');
+				const frontmatter = matter.read(relPath);
+				return `"${frontmatter.data.slug}": () => import("${relPath}")`;
+			}).join(',\n')}`;
+			
+			const contents = `
+			import lazyLoad from "esbuild-plugin-md-runtime";
+			export default () => ({
+				${mapping}
+			});
+		`;
+
+			return { contents, loader: 'ts', resolveDir: process.cwd() };				
+	  });
+	}
+	
 	
 	//MD-RUNTIME
 	build.onResolve({filter: /^esbuild-plugin-md-runtime$/}, (args) => {	
@@ -93,7 +148,7 @@ export default (options?: PluginOptions) => ({
 				namespace: "file"
 		}
 	});
-	
+
 	//ES-PLUGIN-MD
     //resolve imports of .md files
     build.onResolve({ filter: /\.md$/ }, (args) => {
@@ -163,7 +218,7 @@ export default (options?: PluginOptions) => ({
 				  html: markdownHtml,
 				  raw: rawText,
 				  filename: fileName,
-				  frontmatter: frontMatter.data
+				  frontmatter: frontMatter.data as FrontMatter
 				}),
 				loader: "json"
 			}; 		
@@ -171,16 +226,15 @@ export default (options?: PluginOptions) => ({
 		  case "copy":
 		 case "file":
 				
-				try {
 					if (canWrite) {
-						const savedFile = await saveFile(args.pluginData.writePath, {filename:fileName, html: markdownHtml, raw: "", frontmatter: frontMatter.data});
-						if(savedFile) manifest.push({
+						const savedFile = await saveFile(args.pluginData.writePath, {filename:fileName, html: markdownHtml, raw: "", frontmatter: frontMatter.data,path:args.pluginData.originalPath});			
+						if(savedFile) manifest[`${frontMatter.data.slug}`] = {
 							filename:fileName, 
 							frontmatter:frontMatter.data, 
 							location:args.pluginData.url, 
 							path:args.pluginData.originalPath
 							
-							});
+							} as  ManifestData;
 					}
 					return {
 						contents: `
@@ -189,18 +243,21 @@ export default (options?: PluginOptions) => ({
 						`,
 						loader: "js"
 					}
-				} catch(err) {console.error(err);throw err;};
+			
 			break;
 	   }
     });
+	
 	
 	build.onEnd(async (result) => {
 		 if (result.errors.length > 0) {
         console.error('❌ Build failed with errors.');
       } else {
         console.log('✔ Build completed.');
-		if (generateManifest) {
+		if (generateManifest && manifestType == "json") {
 		console.log('Generating site manifest.');	
+		
+		
 
 		const manifestWritePath = path.join(projectRoot, manifestName);
 

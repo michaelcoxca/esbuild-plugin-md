@@ -54,7 +54,7 @@ async function someFunction() {
 
 You can add your own custom configuration of options to `esbuild-plugin-md`:
 
-```js
+```ts
 markdownPlugin({
   markedOptions: { 
 	//options
@@ -94,5 +94,57 @@ await esbuild.build({
 	".md": "json"
   }
   ...
+});
+```
+
+generate a sitemap for static routing:
+
+
+```ts
+await markdownPlugin({
+	generateManifest:true,
+	manifestName:"manifest.json" //default file name
+	... 
+});
+```
+
+this will wrtite a json file with the following structure:
+
+
+```json
+[{
+	filename:string;
+	frontmatter:object;
+	location:string;
+	path:string;
+},
+...
+]
+```
+
+Handle importing your md files with a virtual module:
+
+```ts
+await markdownPlugin({
+	//options
+	generateManifest:true,
+	manifestType:"virtualmodule" // can be json or virtualmodule
+	... 
+});
+```
+
+Then in your code:
+
+```ts
+import manifestMd from "esbuild-plugin-md-manifest";
+let siteMap = manifestMd();
+async someFunction(slug) {
+	if (typeof pageLoader == "function") {
+		let page =await pageLoader();
+		return await page.default;
+	}
+}
+someFunction().then((pg)=>{
+	console.log(pg);
 });
 ```

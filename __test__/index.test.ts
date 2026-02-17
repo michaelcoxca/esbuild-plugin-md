@@ -25,10 +25,11 @@ import { describe, test } from "vitest";
 		await test("Save file using loader:file", async () => {
 			
 			res = await esbuild.build({
-				entryPoints: ['__test__/src/index.html', '__test__/src/basic.ts'],
+				entryPoints: [ '__test__/src/example.ts'],
 				bundle:true,
 				write:true,
-				plugins:[markdownPlugin({generateManifest:true})],
+				sourcemap:true,
+				plugins:[markdownPlugin({generateManifest:true, manifestType:"virtualmodule"})],
 				loader:{".md": "file",
 				".html": "copy",
 				".ts": "ts"},
