@@ -31,7 +31,8 @@
     "dist"
   ],
   "dependencies": {
-    "DOMPurify": "npm:dompurify@^3.3.1",
+    "dompurify": "^3.3.1",
+	"jsdom": "^28.1.0",
     "fs-extra": "^11.3.3",
     "glob": "^13.0.4",
     "gray-matter": "^4.0.3",
@@ -41,9 +42,7 @@
   "devDependencies": {
     "@types/marked": "^5.0.2",
     "@types/node": "^25.2.3",
-    "dompurify": "^3.3.1",
     "esbuild": "^0.27.3",
-    "jsdom": "^28.1.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   }
