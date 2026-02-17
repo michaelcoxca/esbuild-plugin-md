@@ -40,9 +40,11 @@ async function someFunction() {
 	...
 	let content = await getArticle();
 // content: {
-//  html: parsed markdown (with "marked") **Isn't sanitized!**
+//  html: parsed markdown (with "marked") sanitized with DOMPurify
 //  raw: raw markdown file (Blank when using file as loader for .md)
 //  filename: imported file's absolute path
+//  frontmatter: { title, slug } Object containing front-matter
+//
 // }
 	...
 }

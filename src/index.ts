@@ -112,7 +112,7 @@ export default (options?: PluginOptions) => ({
       const markdownRawHtml = parse(frontMatter.content, options?.markedOptions);
 	  
 
-	  const markdownHtml = sanitize ? purify.sanitize(markdownRawHtml) : markdownRawHtml;
+	  const markdownHtml = sanitize ? purify.sanitize(markdownRawHtml as any) : markdownRawHtml;
 	  
 	  switch (mdLoader) {
 		  default:
@@ -129,7 +129,7 @@ export default (options?: PluginOptions) => ({
 				  html: markdownHtml,
 				  raw: rawText,
 				  filename: fileName,
-				  frontMatter: frontMatter.data
+				  frontmatter: frontMatter.data
 				}),
 				loader: "json"
 			}; 		
@@ -144,7 +144,7 @@ export default (options?: PluginOptions) => ({
 							//check if we have permission to actually write files there
 							const hasAccess = await access(writeDir, constants.W_OK);
 							if(hasAccess === undefined) {
-								await writeFile(args.pluginData.writePath, JSON.stringify({filename:fileName, html: markdownHtml, raw: "", frontMatter: frontMatter.data}));
+								await writeFile(args.pluginData.writePath, JSON.stringify({filename:fileName, html: markdownHtml, raw: "", frontmatter: frontMatter.data}));
 							}
 						
 					}
