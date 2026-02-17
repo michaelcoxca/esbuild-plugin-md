@@ -6,7 +6,7 @@ if (isDev) {
 }
 
 const config = {
-  entryPoints: ["./src/index.ts", "./src/markdown.d.ts"],
+  entryPoints: ["./src/index.ts", "./src/runtime.ts"],
   format:"esm",
   //outfile: `./dist/index.${formats[i]}.js`
   outdir:"./dist",
