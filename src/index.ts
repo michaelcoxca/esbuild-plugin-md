@@ -6,9 +6,16 @@ import { readFile, writeFile, mkdir,access, constants  } from 'node:fs/promises'
 import { parse, MarkedOptions } from "marked";
 
 
+import { JSDOM } from 'jsdom';
+import DOMPurify from 'dompurify';
+
+const window = new JSDOM('').window;
+const purify = DOMPurify(window);
+
 
 export interface PluginOptions {
   markedOptions?: MarkedOptions;
+  sanitize?:boolean;
 }
 
 export interface Markdown {
@@ -21,6 +28,12 @@ export default (options?: PluginOptions) => ({
   name: "markdown",
   setup(build) {
 	  
+	  //allow disabling DOMPurify
+	  
+	  let _options = {
+		  ...options
+	  };
+	  const sanitize = _options.sanitize || true;
 
   
 	const canWrite = build.initialOptions.write;
@@ -89,14 +102,15 @@ export default (options?: PluginOptions) => ({
     build.onLoad({ filter: /.*/, namespace: "es-plugin-md" }, async (args) => {
 	  const fileName = path.basename(args.path);
       const rawText = new TextDecoder().decode(await readFile(args.path));  
-      const markdownHTML = parse(rawText, options?.markedOptions);
+      const markdownRawHtml = parse(rawText, options?.markedOptions);
 	  
+	  const markdownHtml = sanitize ? purify(markdownRawHtml) : markdownRawHtml;
 	  
 	  switch (mdLoader) {
 		  default:
 		  case "text":
 			  return {
-				  contents: markdownHTML,
+				  contents: rawText,
 				  loader: "text"
 			  };
 			  break;
@@ -104,7 +118,7 @@ export default (options?: PluginOptions) => ({
 		  case "json":
 			  return {
 				contents: JSON.stringify({
-				  html: markdownHTML,
+				  html: markdownHtml,
 				  raw: rawText,
 				  filename: fileName
 				}),
@@ -121,7 +135,7 @@ export default (options?: PluginOptions) => ({
 							//check if we have permission to actually write files there
 							const hasAccess = await access(writeDir, constants.W_OK);
 							if(hasAccess === undefined) {
-								await writeFile(args.pluginData.writePath, JSON.stringify({filename:fileName, html: markdownHTML, raw:""}));
+								await writeFile(args.pluginData.writePath, JSON.stringify({filename:fileName, html: markdownHtml, raw: ""}));
 							}
 						
 					}
