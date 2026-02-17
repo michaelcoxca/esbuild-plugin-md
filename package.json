@@ -20,7 +20,8 @@
     "dev": "node esbuild.config.mjs --dev",
     "type-check": "tsc --project tsconfig.json --noEmit",
     "build": "node esbuild.config.mjs && tsc --project tsconfig.json --emitDeclarationOnly --declaration --outDir dist",
-    "test": "vitest"
+    "test": "vitest",
+	"prepare": "npm run build"
   },
   "files": [
     "dist"
